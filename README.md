@@ -13,7 +13,7 @@ This repository contains two artifacts:
 
    * To evaluate this, we provide a DPDK-based benchmarking application that measures the performance of different queue implementations (*e.g.*, FCFS, a drop-tail Fibonacci heap, the hFFS queue) in the presence of adversarial attacks targeting the queue itself.
 
-The [Pigasus IDS](https://github.com/crossroadsfpga/pigasus) is an archetypal example of a real-world application that can benefit from the SurgeProtector framework. To track the upstreaming effort, please refer to [this changelist](https://github.com/crossroadsfpga/pigasus/pull/16).
+The [**Pigasus IDS**](https://github.com/crossroadsfpga/pigasus) is an archetypal example of a real-world application that can benefit from this framework, and we are currently integrating the SurgeProtector scheduler into the Pigasus FPGA datapath. The resulting design is fully operational, and will be upstreamed after end-to-end testing. To track the upstreaming effort, please see [this changelist](https://github.com/crossroadsfpga/pigasus/pull/16).
 
 ## Minimum Requirements
 This code is known to be compatible with `Ubuntu 20.04 LTS`, `GCC 9.4+`, `CMake 3.10+`, `Python 3.8+`, `Boost C++ v1.78`, `DPDK 20.11.3`, and `Libconfig 1.7.3+`. Note that running DPDK applications requires a compatible NIC and Linux kernel version; the simulator does not use DPDK, and can be run without any special hardware.
