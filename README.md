@@ -60,7 +60,7 @@ make
 If compilation was successful, `build/bin/` should contain executables for the simulator (`simulator`), as well as the scheduler benchmarking application (`sched_benchmark_server` and `sched_benchmark_pktgen`).
 
 #### Compiling this code without DPDK
-To compile the caching simulator without installing DPDK, edit `CMakeLists.txt` in the top-level directory, and comment out the following line: `add_subdirectory(scheduler)`. Now follow the steps in [**Compiling this code**](#compiling-this-code) as usual.
+To compile the scheduling simulator without installing DPDK, edit `CMakeLists.txt` in the top-level directory, and comment out the following line: `add_subdirectory(scheduler)`. Now follow the steps in [**Compiling this code**](#compiling-this-code) as usual.
 
 ## Using the Simulator
 To view the available command-line options, from the run `build` directory, run `./bin/simulator --help`. The simulator takes several arguments, the most important being `config`; this argument points to a ".cfg" file containing a user-specified simulation configuration. It specifies several parameters: the scheduling policy to use, the application to simulate, the innocent traffic workload, and the adversarial traffic workload. For instance, please see `simulator/configs/examples/example_1.cfg`. To simulate this configuration, run:
