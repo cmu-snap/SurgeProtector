@@ -1,0 +1,9 @@
+# Build static library
+include_directories(.)
+add_library(simulator_server STATIC server.cpp)
+
+target_link_libraries(simulator_server common)
+target_link_libraries(simulator_server distributions)
+target_link_libraries(simulator_server simulator_packet)
+target_link_libraries(simulator_server simulator_applications)
+target_link_libraries(simulator_server simulator_queueing)
