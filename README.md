@@ -48,7 +48,7 @@ make install
 
 Our Python scripts also require libconfig; to install the relevant Python library, run:
 ```
-pip3 install libconfig
+pip3 install libconf
 ```
 ### Compiling this code
 Clone this repository to a convenient location. In the top-level directory for this project, run the following snippet:
