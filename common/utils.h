@@ -10,19 +10,26 @@
  */
 template<class Tag, class Metric> class MinHeapEntry {
 private:
-    Tag tag_; // Tag corresponding to this min-heap entry
+    Tag tag_; // Tag corresponding to this entry
+    double insert_time_; // Time (in ns) of insertion
     Metric primary_metric_; // The primary priority metric
 
 public:
-    explicit MinHeapEntry(const Tag& tag, const Metric& metric) :
-                          tag_(tag), primary_metric_(metric) {}
+    explicit MinHeapEntry(const Tag& tag, const Metric& metric, const double in_time=0) :
+                          tag_(tag), insert_time_(in_time), primary_metric_(metric) {}
     // Accessors
     const Tag& tag() const { return tag_; }
+    double getInsertTime() const { return insert_time_; }
     Metric getPrimaryMetric() const { return primary_metric_; }
 
     // Comparator
     bool operator<(const MinHeapEntry& other) const {
-        return primary_metric_ > other.primary_metric_;
+        // Sort by the primary metric
+        if (primary_metric_ != other.primary_metric_) {
+            return primary_metric_ > other.primary_metric_;
+        }
+        // If tied, sort by insertion time
+        return insert_time_ >= other.insert_time_;
     }
 };
 

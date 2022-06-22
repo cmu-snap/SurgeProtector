@@ -13,6 +13,7 @@ Packet SJFQueue::peek() const {
 }
 
 void SJFQueue::push(const Packet& packet) {
-    SJFPriorityEntry entry(packet, packet.getJobSizeEstimate());
+    SJFPriorityEntry entry(packet, packet.getJobSizeEstimate(),
+                           packet.getArriveTime());
     queue_.push(entry);
 }

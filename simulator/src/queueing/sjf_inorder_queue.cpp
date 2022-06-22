@@ -41,7 +41,8 @@ Packet SJFInorderQueue::pop() {
     if (!iter->second.empty()) {
         priorities_.update(
             iter->second.getHandle(),
-            SJFPriorityEntry(flow_id, iter->second.getFlowRatio())
+            SJFPriorityEntry(flow_id, iter->second.getFlowRatio(),
+                             iter->second.front().getArriveTime())
         );
     }
     // Else, purge both the flow mapping and heap entry
@@ -71,17 +72,19 @@ void SJFInorderQueue::push(const Packet& packet) {
         SJFInorderFlowMetadata& data = data_[flow_id].push(packet);
         assert(data.size() == 1); // Sanity check
         handle_t handle = priorities_.push(
-            SJFPriorityEntry(flow_id, data.getFlowRatio())
+            SJFPriorityEntry(flow_id, data.getFlowRatio(),
+                             data.front().getArriveTime())
         );
         // Set the flow's heap handle
         data.setHandle(handle);
     }
     else {
         assert(!iter->second.empty()); // Sanity check
-        SJFInorderFlowMetadata data = iter->second.push(packet);
+        SJFInorderFlowMetadata& data = iter->second.push(packet);
         priorities_.update(
             iter->second.getHandle(),
-            SJFPriorityEntry(flow_id, data.getFlowRatio())
+            SJFPriorityEntry(flow_id, data.getFlowRatio(),
+                             data.front().getArriveTime())
         );
     }
     size_++; // Update the global queue size

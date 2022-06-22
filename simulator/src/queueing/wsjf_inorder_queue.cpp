@@ -42,7 +42,8 @@ Packet WSJFInorderQueue::pop() {
     if (!iter->second.empty()) {
         priorities_.update(
             iter->second.getHandle(),
-            WSJFPriorityEntry(flow_id, iter->second.getFlowRatio())
+            WSJFPriorityEntry(flow_id, iter->second.getFlowRatio(),
+                              iter->second.front().getArriveTime())
         );
     }
     // Else, purge both the flow mapping and heap entry
@@ -72,17 +73,19 @@ void WSJFInorderQueue::push(const Packet& packet) {
         WSJFInorderFlowMetadata& data = data_[flow_id].push(packet);
         assert(data.size() == 1); // Sanity check
         handle_t handle = priorities_.push(
-            WSJFPriorityEntry(flow_id, data.getFlowRatio())
+            WSJFPriorityEntry(flow_id, data.getFlowRatio(),
+                              data.front().getArriveTime())
         );
         // Set the flow's heap handle
         data.setHandle(handle);
     }
     else {
         assert(!iter->second.empty()); // Sanity check
-        WSJFInorderFlowMetadata data = iter->second.push(packet);
+        WSJFInorderFlowMetadata& data = iter->second.push(packet);
         priorities_.update(
             iter->second.getHandle(),
-            WSJFPriorityEntry(flow_id, data.getFlowRatio())
+            WSJFPriorityEntry(flow_id, data.getFlowRatio(),
+                              data.front().getArriveTime())
         );
     }
     size_++; // Update the global queue size

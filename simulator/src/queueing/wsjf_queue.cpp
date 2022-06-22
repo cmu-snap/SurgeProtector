@@ -16,6 +16,6 @@ void WSJFQueue::push(const Packet& packet) {
     double metric = (packet.getJobSizeEstimate() /
                      static_cast<double>(packet.getPacketSize()));
 
-    WSJFPriorityEntry entry(packet, metric);
+    WSJFPriorityEntry entry(packet, metric, packet.getArriveTime());
     queue_.push(entry);
 }

@@ -53,7 +53,9 @@ void FQQueue::push(const Packet& packet) {
     const FQFlowMetadata data = data_[
         packet.getFlowId()].push(packet);
 
-    FQPriorityEntry entry(packet, data.getVirtualClock());
+    FQPriorityEntry entry(packet, data.getVirtualClock(),
+                          packet.getArriveTime());
+
     queue_.push(entry); // Insert packet into the queue
     size_++; // Increment the global queue size
 }
