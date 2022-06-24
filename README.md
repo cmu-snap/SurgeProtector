@@ -20,7 +20,7 @@ This code is known to be compatible with `Ubuntu 20.04 LTS`, `GCC 9.4+`, `CMake 
 
 ## Installation (Linux)
 Install g++-9, CMake and make sure their dependencies are met:  
-```
+```bash
 sudo apt-get update
 sudo apt-get install g++-[9+]
 sudo apt-get install cmake
@@ -39,7 +39,7 @@ Download DPDK (v20.11+) [here](https://core.dpdk.org/download/), and follow thei
 
 ### 3. Installing Libconfig
 The simulator uses Libconfig to read user-specified application and traffic configurations. Download Libconfig (v1.7.3+) [here](https://hyperrealm.github.io/libconfig/), and extract the tarball to a convenient location. In the top-level directory (*e.g.* `~/libs/libconfig-1.7.3/`), run:
-```
+```bash
 sh ./configure
 make
 make check
@@ -47,12 +47,12 @@ make install
 ```
 
 Our Python scripts also require libconfig; to install the relevant Python library, run:
-```
+```bash
 pip3 install libconf
 ```
 ### Compiling this code
 Clone this repository to a convenient location. In the top-level directory for this project, run the following snippet:
-```
+```bash
 mkdir build && cd build
 cmake ..
 make
@@ -64,7 +64,7 @@ To compile the scheduling simulator without installing DPDK, edit `CMakeLists.tx
 
 ## Using the Simulator
 To view the available command-line options, from the run `build` directory, run `./bin/simulator --help`. The simulator takes several arguments, the most important being `config`; this argument points to a ".cfg" file containing a user-specified simulation configuration. It specifies several parameters: the scheduling policy to use, the application to simulate, the innocent traffic workload, and the adversarial traffic workload. For instance, please see `simulator/configs/examples/example_1.cfg`. To simulate this configuration, run:
-```
+```bash
 ./bin/simulator --config=../simulator/configs/examples/example_1.cfg
 ```
 
@@ -73,7 +73,7 @@ If simulation was successful, the input configuration and key performance result
 To address these limitations, we provide an alternate flow: template configurations and a job-generation script. To view the available options for the alternate flow, `cd` into the `simulator/scripts` directory and run `python3 generate_jobs.py --help`. The script requires three arguments: the path to the simulator binary, the path to a "template" configuration file, and a path to a directory to store the results. Additionally, it allows the user to specify a list of policies, innocent input rates, and attack rates to simulate. Given these parameters, the script does the following: performs a "dry-run" to determine the innocent packet and job size distributions for the given template configuration, computes the "optimal" attack strategy for each parameter setting (the relevant code can be found in `simulator/scripts/adversary/`), generates the appropriate configuration files, and outputs an executable shell script to run the simulations.
 
 As an example, from the `simulator/scripts` directory, run:
-```
+```bash
 python3 generate_jobs.py \
     "${SURGEPROTECTOR_ROOT_DIR}/build/bin/simulator" \
     "${SURGEPROTECTOR_ROOT_DIR}/simulator/configs/templates/iid_job_sizes.cfg" \
@@ -83,14 +83,38 @@ python3 generate_jobs.py \
     --attack_rates=10M,30M,70M,100M,300M,700M
 ```
 
-where ${SURGEPROTECTOR_ROOT_DIR} corresponds to the *absolute path* of the top-level directory for this project. If successful, this should create a directory called `simulator/data/iid_job_sizes`. Next, `cd` into it. `ls` should show the original template configuration specified (`template.cfg`), a packet log resulting from the dry-run (`log.packets`), a directory containing the relevant configuration files (`configs/`), and an executable script (`jobs.sh`) containing commands to run the required set of simulations (one per line). To run these, simply do:
-```
+where `${SURGEPROTECTOR_ROOT_DIR}` corresponds to the *absolute path* of the top-level directory for this project. If successful, this should create a directory called `simulator/data/iid_job_sizes`. Next, `cd` into it. `ls` should show the original template configuration specified (`template.cfg`), a packet log resulting from the dry-run (`log.packets`), a directory containing the relevant configuration files (`configs/`), and an executable script (`jobs.sh`) containing commands to run the required set of simulations (one per line). To run these, simply do:
+```bash
 ./jobs.sh # Can also use parallel < jobs.sh if you have enough cores/memory
 ```
 
 Once simulations complete, the `outputs` directory should contain a collection of the result logs (simply tee'd from stdout during execution). To plot the results, navigate back to `simulator/scripts`, and run `python3 plot_results.py ${SURGEPROTECTOR_ROOT_DIR}/simulator/data/iid_job_sizes`. The format is as follows: each column of the graph represents a different *innocent input rate* (100Mbps on the left, 500Mbps in the middle, and 900Mbps on the right), and on the X-axis we sweep different *attack input rates* (going from 10Mbps to 700Mbps); finally, we plot the *Displacement Factor (DF)* and *goodput* for each policy in the top and bottom rows, respectively. Observe that WSJF (the policy underlying SurgeProtector) achieves a maximum DF of 1.
 
-The graphs in the paper can be reproduced by repeating this process with the template configuration files for TCP Reassembly (`simulator/configs/templates/tcp_reassembly.cfg`) and the Pigasus Full Matcher (`simulator/configs/templates/full_matcher.cfg`). Please note the the `trace_fp` parameter must be set correctly in both cases! For TCP Reassembly, we use traces from the 2014 CAIDA dataset (must be acquired from their [website](https://www.caida.org/catalog/datasets/passive_dataset_download/)). A portion of the Full Matching trace can be found in `simulator/traces/full_matching.csv`.
+### Reproducing the Results in the Paper
+The results of Figure 14 and 15 in the paper can be reproduced by repeating this process with the template configuration files for TCP Reassembly (`simulator/configs/templates/tcp_reassembly.cfg`) and the Pigasus Full Matcher (`simulator/configs/templates/full_matcher.cfg`). Please note the the `trace_fp` parameter must be set correctly in both cases! For TCP Reassembly, we use traces from the 2014 CAIDA San Jose dataset (which we cannot make public due to CAIDA's policy, see the note below). The Full Matching trace can be found in `simulator/traces/full_matcher.csv`. Once you set the `trace_fp` parameters, you can use the following commands to reproduce the results:
+```bash
+# To reproduce the results of Figure 14 (TCP Reassembly)
+python3 generate_jobs.py \
+    "${SURGEPROTECTOR_ROOT_DIR}/build/bin/simulator" \
+    "${SURGEPROTECTOR_ROOT_DIR}/simulator/configs/templates/tcp_reassembly.cfg" \
+    "${SURGEPROTECTOR_ROOT_DIR}/simulator/data/tcp_reassembly" \     
+    --policies=fcfs,fq,sjf_inorder,wsjf_inorder     
+    --innocent_rates=1G,5G,10G     
+    --attack_rates=10M,30M,70M,100M,300M,700M,1G,3G,7G,10G
+    
+# To reproduce the results of Figure 15 (Full Matcher)
+python3 generate_jobs.py \
+    "${SURGEPROTECTOR_ROOT_DIR}/build/bin/simulator" \
+    "${SURGEPROTECTOR_ROOT_DIR}/simulator/configs/templates/full_matcher.cfg" \
+    "${SURGEPROTECTOR_ROOT_DIR}/simulator/data/full_matcher" \
+    --policies=fcfs,fq,sjf,wsjf \
+    --innocent_rates=0.1G,0.5G,0.9G \
+    --attack_rates=1M,3M,7M,10M,30M,70M,100M,300M,700M
+```
+
+
+#### Note on the 2014 Caida San Jose Dataset
+Note that the 2014 Caida San Jose Data is not publicly avaialble, and you must acquire this dataset from CAIDA's [website](https://www.caida.org/catalog/datasets/passive_dataset_download/). To reproduce the CSV file used in our simulation youself, you can use [tshark.sh](#) to convert from PCAP to CSV and [reformat_trace.py](#) to convert from CSV to simulator-compatible CSV. You can also request the CSV file used in our simulation directly from us once you have acquired the permission to access this dataset from CAIDA.
 
 ### Extending the Simulator
 The simulator was designed with extensibility in mind, and we hope it enables developers to quickly implement and evaluate their own applications, distributions, scheduling policies, and traffic generators. We abstract out the basic interface for each of these components into base classes (*e.g.*, `common/distributions/distribution.h` and `simulator/src/queueing/base_queue.h`) that can be inherited from. For a simple example, please refer to the class definition for `FCFSQueue` in `simulator/src/queueing/fcfs_queue.{h,cpp}`.
@@ -100,13 +124,13 @@ The simulator was designed with extensibility in mind, and we hope it enables de
 As described earlier, this repository also contains a DPDK-based application to benchmark the performance of the software hFFS Queue used in SurgeProtector. To run this application, you will need two (2) DPDK-compatible 10Gbps+ NICs set up on two different machines, connected back-to-back. One of these will serve as the *packet generator* (`PKTGEN`) for both innocent and attack traffic, while the other will serve as the *device-under-test* (`DUT`). The experiment works as follows. For each of the several heap designs under considerideration, we will pin a process running a software implementation of the heap to a single core on the `DUT`, where it will consume packets from the Ethernet link via DPDK. The packets (encoding the job size in us) are dispatched to a different core, which emulates ‘running’ the job by sleeping for a period of time corresponding to the job size. A third core is responsible for profiling the application goodput.
 
 On the `PKTGEN` machine, from the `build` directory, run:
-```
+```bash
 sudo ./bin/sched_benchmark_pktgen -l 15,16,17 -n 4 -- --rate-innocent=10 --rate-attack=0.1
 ```
 to send 1Gbps of innocent traffic and 100Mbps of attack traffic.
 
 Similarly, on the `DUT` machine, from the `build` directory, run:
-```
+```bash
 sudo ./bin/sched_benchmark_server -l 0,1,2 -n 4 -- --policy=X
 ```
 where X can be either "fcfs" (FCFS), "wsjf_drop_tail" (Fibonacci heap), "wsjf_drop_max" (Double-Ended Priority Queue), or "wsjf_hffs" (Hierarchical Find-First Set Queue). If successful, the profiling core on the `DUT` should display the instantaneous goodput every second. The `scheduler/scripts/plot_results.py` script can be used to plot the experiment results.
